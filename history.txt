@@ -1,0 +1,58 @@
+Version History
+
+2020.2.9 : v1.0.1 - add detailed CFD (using python to call CATIA, pointwise)
+    ||
+2020.2.8 : v1.0.1 - add get_best_arch in ANN. now you can get the best ANN architecture with minimum RMSE using cross validation. then, you can use this architecture in the main program
+    ||
+2020.2.7 : v1.0.1 - add surro_valid_compare, which compares optimization results using surrogate models and validation using optimized X (only available for single, two, three objectives)
+    ||
+2020.2.6 : v1.0.1 - remove distance calculation in sequential adaptive sampling (because the calculaiton time is too long with different parameters setting, up to about 10 hours, with 30 processes parallel).
+                    now it will only remove duplicate samples (we still keep distance calculation function if you want to use it)
+    ||
+2020.2.5 : v1.0.1 - debug multi objective optimization using surrogate model
+    ||
+2020.2.4 : v1.0.1 - add multi objective benchmark functions and debug
+    ||
+2020.2.3 : v1.0.1 - improve adaptive sequential sampling(parallel version)
+    ||
+2020.1.23 : v1.0.1 - add plot(multi dimension) in exploitation, sequential adaptive sampling. add more benchmark functions and debug
+    ||
+2020.1.22 : v1.0.1 - combine divide method and cross_validation and improve code
+    ||
+2020.1.21 : v1.0.1 - improve cross_validation(parallel version)
+    ||
+2020.1.20 : v1.0.1 - add plot(multi dimension) in sampling_plan, benchmark_fun, surrogate_model
+    ||
+2020.1.17 : v1.0.1 - add RBF(pytorch version)
+    ||
+2020.1.16 : v1.0.1 - add adaptive sequential sampling
+    ||
+2020.1.15 : v1.0.1 - add exploitation
+    ||
+2020.1.14 : v1.0.1 - improve plot(2D), add plot(1D) in sampling_plan, benchmark_fun, surrogate_model, exploration
+    ||
+2020.1.13 : v1.0.1 - add exploration
+    ||
+2020.1.12 : v1.0.1 - improve data flow and code structure using yEd, add function: optimize using CFD directly
+    ||
+2020.1.11 : v1.0.1 - add database
+    ||
+2020.1.10 : v1.0.1 - read geatpy2.0 code, add optimization
+    ||
+2020.1.9 : v1.0.1 - add divide_method, cross_validation(serial version)
+    ||
+2020.1.8 : v1.0.1 - add ANN (pytorch version)
+    ||
+2020.1.7 : v1.0.1 - learn and test pytorch. draw data flow and code structure using yEd
+    ||
+2020.1.6 : v1.0.1 - debug: with complete the same code, the ANN model trained using tensorflow 1.10.0 is correct. however, it is obviously wrong when trained using tensorflow 2.0 , I didn't know why. so I decided to use pytorch instead
+    ||
+2020.1.5 : v1.0.1 - simplify KRG (removed unnecessary code from pyKriging)
+    ||
+2020.1.4 : v1.0.1 - add KRG (from pyKriging). compared with another surrogate model toolbox (https://github.com/SMTorg/smt), this toolbox has bug when total training data is larger than 150
+    ||
+2020.1.3 : v1.0.1 - add ANN_tensorflow_1.10.0
+    ||
+2020.1.2 : v1.0.1 - add benchmark_func, surrogate_model
+    ||
+2020.1.1 : v1.0.1 - add sampling_plan. read optimal_lhs code
