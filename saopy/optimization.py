@@ -166,7 +166,7 @@ if __name__ == '__main__':
     from saopy.surrogate_model.surrogate_model import *
 
 
-    flag=0 # 0:single object demo, 1:multi object demo
+    flag=1 # 0:single object demo, 1:multi object demo
 
     if flag==0: # single object demo
         dimension=2
@@ -209,15 +209,15 @@ if __name__ == '__main__':
         opt.plot()
 
     else: # multi object demo
-        dimension = 30
+        dimension = 7
 
         lower_bound = [0]*dimension
         upper_bound = [1]*dimension
 
         f_list = []
         # f_list.append(load_obj('best_surro'))  # optimize using surrogate model
-        f_list.append(ZDT1_obj0())  # optimize using real function
-        f_list.append(ZDT1_obj1())  # optimize using real function
-        # f_list.append(DTLZ1_obj2())  # optimize using real function
+        f_list.append(DTLZ1_obj0())  # optimize using real function
+        f_list.append(DTLZ1_obj1())  # optimize using real function
+        f_list.append(DTLZ1_obj2())  # optimize using real function
         opt = optimization(lower_bound, upper_bound, f_list, max_gen=500, pop_size=100)
         opt.optimize()

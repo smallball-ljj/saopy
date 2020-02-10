@@ -449,8 +449,8 @@ if __name__ == '__main__':
     a=optimal_lhs(40,2)
     a.begin_sampling(2,30,100,[2])
 
-    # a.inverse_norm(lower_bound, upper_bound)
+    a.inverse_norm(lower_bound, upper_bound)
 
-    # a.output('output_sampling_plan.csv')
+    a.output('output_sampling_plan.csv')
 
     a.plot()

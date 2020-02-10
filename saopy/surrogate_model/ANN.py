@@ -172,7 +172,7 @@ def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons
     :param upper_bound: upper boundary of X
     :param file_X: X.csv
     :param file_y: y.csv
-    :param max_layers: max layer of ANN
+    :param max_layers: max layers of ANN
     :param max_neurons: max neurons of ANN
     :param step: step of neurons
     :param num_fold: fold number for cross validation
@@ -187,7 +187,7 @@ def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons
     for surro in surro_list:
         surro.load_data(lower_bound, upper_bound, file_X, file_y)
         surro.normalize_all()
-    cros_valid=cross_validation.random(surro_list,num_fold=num_fold)
+    cros_valid=cross_validation.opt_test_data(surro_list,num_fold=num_fold)
     cros_valid.divide()
     best_ind = cros_valid.begin_cross_validation(parallel_num) # get best model index
     best_surro = surro_list[best_ind] # get best model with minimum RMSE
@@ -249,11 +249,11 @@ if __name__ == '__main__':
     lower_bound = [0, 0]
     upper_bound = [1, 1]
 
-    max_layers = 2
-    max_neurons = 1
-    step=10
-    num_fold=3
-    parallel_num=3
+    max_layers = 2 # max layers of ANN
+    max_neurons = 1 # max neurons of ANN
+    step=10 # step of neurons
+    num_fold=3 # fold number for cross validation
+    parallel_num=3 # parallel process number for cross validation
 
     best_ANN_arch=get_best_arch(lower_bound,upper_bound,'X.csv','y.csv',max_layers,max_neurons,step,num_fold,parallel_num)
     get_best_arch_plot_RMSE(max_layers, max_neurons,step,0)

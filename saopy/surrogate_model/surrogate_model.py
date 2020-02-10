@@ -51,6 +51,7 @@ class surrogate_model():
         self.y_max = None # min of y, got from load_data()
 
         self.point_max_error = None # got from cross_validation()
+        self.max_test_error = None # got from cross_validation(). as the level of exploitation
 
     def read_csv_to_np(self,file_name):
         """

@@ -33,8 +33,9 @@ def surro_valid_compare(obj_num,total_iter):
     if os.path.exists('plot') == False:
         os.makedirs('plot')
 
-    if obj_num == 1:
+    if obj_num == 1: # compare results of single objective optimization
         best_var = read_csv_to_np('best_var.csv')
+        best_var=best_var[0:total_iter,:]
         X = read_csv_to_np('X.csv')
         y = read_csv_to_np('y.csv')
 
@@ -47,6 +48,7 @@ def surro_valid_compare(obj_num,total_iter):
         np.savetxt('best_ObjV_valid', best_ObjV_valid, delimiter=',')
 
         best_ObjV_surro = read_csv_to_np('best_ObjV.csv')
+        best_ObjV_surro = best_ObjV_surro[0:total_iter, :]
 
         plt.figure(figsize=(10, 8))
         plt.plot(range(1, best_ObjV_valid.shape[0] + 1), best_ObjV_valid, marker='^', c='black')
@@ -62,7 +64,7 @@ def surro_valid_compare(obj_num,total_iter):
         plt.close()
 
 
-    elif obj_num == 2:
+    elif obj_num == 2: # compare results of 2 objective optimization
         total_iter -= 1  # note: the last iteration X_new.csv is not stack to X.csv
 
         X = read_csv_to_np('X.csv')
@@ -99,7 +101,7 @@ def surro_valid_compare(obj_num,total_iter):
             plt.close()
 
 
-    elif obj_num == 3:
+    elif obj_num == 3: # compare results of 3 objective optimization
         total_iter -= 1  # note: the last iteration X_new.csv is not stack to X.csv
 
         X = read_csv_to_np('X.csv')

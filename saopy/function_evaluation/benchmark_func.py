@@ -560,6 +560,7 @@ if __name__ == '__main__':
     # f = schwefel(dimension)
     f = shubert(dimension)
 
+
     # X = f.read_csv_to_np('output_sampling_plan.csv')
     # f.calculate(X)
     # f.output('output_func.csv')

@@ -12,6 +12,10 @@ from matplotlib import colors
 class exploration():
     """
     base class of exploration
+
+    usage: generate a set of points with max intersite distance
+    reference:
+    Crombecq K , Laermans E , Dhaene T . Efficient space-filling and non-collapsing sequential design strategies for simulation-based modeling[J]. European Journal of Operational Research, 2011, 214(3):683-696
     """
     def __init__(self):
         self.X = None # got from load_data(). all samples X
@@ -145,6 +149,13 @@ class exploration():
         # output
         self.exploration_X=self.inverse_normalize_X(self.exploration_X)
         np.savetxt('X_exploration.csv', self.exploration_X, delimiter=',')
+
+        if os.path.exists('level_of_exploration.csv') == False:
+            np.savetxt('level_of_exploration.csv', np.array([self.min_dis.max()]), delimiter=',')
+        else:
+            level_of_exploration_old = self.read_csv_to_np('level_of_exploration.csv')
+            level_of_exploration = np.vstack((level_of_exploration_old, np.array([self.min_dis.max()])))
+            np.savetxt('level_of_exploration.csv', level_of_exploration, delimiter=',')
 
 
     def plot(self, i, y_range=[], outer_iter=0):

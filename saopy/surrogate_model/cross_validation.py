@@ -40,7 +40,6 @@ import os
 import csv
 import numpy as np
 from multiprocessing import Pool
-from itertools import combinations
 import matplotlib.pyplot as plt
 
 
@@ -94,12 +93,13 @@ class cross_validation():
             self.surro_list[i].normalized_fold_y = self.surro_list[0].normalized_fold_y
 
 
-    def begin_cross_validation(self, parallel_num, plot_flag=0):
+    def begin_cross_validation(self, parallel_num, plot_flag=0, obj_ind=0):
         """
         cross validation all surrogate model in self.surro_list
 
         :param parallel_num: total parallel process number (must >=1 )
-        :param plot_flag: plot_flag Predicted Value vs Ground Truth
+        :param plot_flag: plot Predicted Value vs Ground Truth
+        :param obj_ind: objective index for saving RMSE_mean_min.csv (use for multi objective optimization)
         output: mean RMSE of all fold of all surrogate model in self.surro_list
         """
         if os.path.exists('plot') == False:
@@ -124,7 +124,8 @@ class cross_validation():
             fold_ind += 1
             if fold_ind % self.num_fold == 0: # all fold cross validation of this surrogate model is completed
                 self.surro_list[surro_ind].point_max_error = point_max_error[max_test_error.argmax()]  # get self.point_max_error for exploitation.py to call it
-                RMSE_mean.append(RMSE.mean())
+                self.surro_list[surro_ind].max_test_error = max_test_error.max() # get self.max_test_error for exploitation.py to call it
+                RMSE_mean.append(RMSE.mean()) # get mean RMSE of all fold of this surrogate model, and append
                 surro_ind += 1
                 RMSE = np.zeros((self.num_fold, 1))  # initialize RMSE list of all fold
                 max_test_error = np.zeros((self.num_fold, 1))  # initialize max_test_error list of all fold
@@ -137,14 +138,14 @@ class cross_validation():
         np.savetxt('RMSE_mean.csv', RMSE_mean, delimiter=',')
 
         # save RMSE_mean.min()
-        if os.path.exists('RMSE_mean_min.csv') == False:
-            np.savetxt('RMSE_mean_min.csv', np.array([RMSE_mean.min()]), delimiter=',')
+        if os.path.exists('RMSE_mean_min'+str(obj_ind)+'.csv') == False:
+            np.savetxt('RMSE_mean_min'+str(obj_ind)+'.csv', np.array([RMSE_mean.min()]), delimiter=',')
         else:
-            RMSE_mean_min_old = self.read_csv_to_np('RMSE_mean_min.csv')
-            RMSE_mean_min = np.vstack((RMSE_mean_min_old, RMSE_mean.min()))
-            np.savetxt('RMSE_mean_min.csv', RMSE_mean_min, delimiter=',')
+            RMSE_mean_min_old = self.read_csv_to_np('RMSE_mean_min'+str(obj_ind)+'.csv')
+            RMSE_mean_min = np.vstack((RMSE_mean_min_old, np.array([RMSE_mean.min()])))
+            np.savetxt('RMSE_mean_min'+str(obj_ind)+'.csv', RMSE_mean_min, delimiter=',')
 
-        pool.close() # comment this, if you use <pool.close()> and <pool.joint()> in line 92,93
+        pool.close() # comment this, if you use <pool.close()> and <pool.joint()> in line 114,115
         return RMSE_mean.argmin() # return surrogate model index with minimum RMSE_mean
 
     def append_parallel_process(self, surro, parallel_process, pool, plot_flag):
@@ -216,11 +217,15 @@ class cross_validation():
         plt.close()
 
 
+
 class random(cross_validation):
     def divide_surro_0(self):
         surro = self.surro_list[0]  # the first surrogate model
         rand_seq = np.random.permutation(np.arange(0, surro.normalized_X.shape[0], 1))  # generate a random sequence, e.g. if total number of samples: n=5, then  rand_seq=[1,3,2,5,4]
+        self.divide_according_to_seq(rand_seq)
 
+    def divide_according_to_seq(self,seq):
+        surro = self.surro_list[0] # the first surrogate model
         part_X = np.zeros((self.samples_per_fold, surro.normalized_X.shape[1])) # initialize the first part
         part_y = np.zeros((self.samples_per_fold, surro.normalized_y.shape[1]))
 
@@ -229,8 +234,8 @@ class random(cross_validation):
         ind = 0      # index of the sample in part_X
         count = 0    # count of stored samples
         last_part_flag = 0     # last part flag
-        for i in rand_seq:
-            part_X[ind] = surro.normalized_X[i]  # the samples in part_X follows the rand_seq in the original dataset: surro.normalized_X
+        for i in seq:
+            part_X[ind] = surro.normalized_X[i]  # the samples in part_X follows the seq in the original dataset: surro.normalized_X
             part_y[ind] = surro.normalized_y[i]
             ind += 1
             count += 1
@@ -260,10 +265,168 @@ class random(cross_validation):
 
 class opt_test_data(cross_validation):
     def divide_surro_0(self):
-        current_normalized_X = self.surro_list[0].normalized_X
-        for i in range(self.num_fold):
-            # ==================================================
-            # memory error if this value is too large !!!!!!!!!!!
-            comb_list_current_normalized_X = list(combinations(range(current_normalized_X.shape[0]), self.samples_per_fold)) # all combinations of current_normalized_X
-            # ==================================================
-            print(comb_list_current_normalized_X)
+        surro = self.surro_list[0]  # the first surrogate model
+        seq = [] # initialize sequence for self.divide_according_to_seq
+
+        normalized_X_tmp = surro.normalized_X.copy()
+        for k in range(self.num_fold-1):
+            rand_ind = np.random.randint(0, normalized_X_tmp.shape[0]) # generate a random index
+            part_X = normalized_X_tmp[rand_ind] # add this x to part_X
+            normalized_X_tmp = np.delete(normalized_X_tmp, rand_ind, axis=0) # delete this x in normalized_X_tmp
+
+            for j in range(self.samples_per_fold-1):
+                dis=0
+                for i in range(normalized_X_tmp.shape[0]):
+                    part_X_tmp = np.vstack((part_X,normalized_X_tmp[i])) # stack next x
+                    dis_temp = 1 / self.calculate_distance_phi(part_X_tmp) # calculate distance, the larger the better
+                    if dis_temp > dis:
+                        dis = dis_temp
+                        best_ind = i # save best index
+                part_X = np.vstack((part_X,normalized_X_tmp[best_ind]))
+                normalized_X_tmp = np.delete(normalized_X_tmp, best_ind, axis=0)  # delete this x in normalized_X_tmp
+
+            # part_X full, save seq
+            for p in range(part_X.shape[0]):
+                for q in range(surro.normalized_X.shape[0]):
+                    if (part_X[p, :] == surro.normalized_X[q, :]).all():
+                        seq.append(q)
+                        break
+
+        # save seq for the last part_X
+        for p in range(normalized_X_tmp.shape[0]):
+            for q in range(surro.normalized_X.shape[0]):
+                if (normalized_X_tmp[p, :] == surro.normalized_X[q, :]).all():
+                    seq.append(q)
+                    break
+
+        seq=np.array(seq)
+        self.divide_according_to_seq(seq)
+
+    # note: the following code is the same in class random(), which can be improved further
+    def divide_according_to_seq(self,seq):
+        surro = self.surro_list[0]  # the first surrogate model
+        part_X = np.zeros((self.samples_per_fold, surro.normalized_X.shape[1])) # initialize the first part
+        part_y = np.zeros((self.samples_per_fold, surro.normalized_y.shape[1]))
+
+        surro.normalized_fold_X = []  # store all the part_X results
+        surro.normalized_fold_y = []
+        ind = 0      # index of the sample in part_X
+        count = 0    # count of stored samples
+        last_part_flag = 0     # last part flag
+        for i in seq:
+            part_X[ind] = surro.normalized_X[i]  # the samples in part_X follows the seq in the original dataset: surro.normalized_X
+            part_y[ind] = surro.normalized_y[i]
+            ind += 1
+            count += 1
+
+            if (count==self.samples_per_fold*(self.num_fold-1)): # the second-to-last part_X is full, so the initialization of part_X is different
+                surro.normalized_fold_X.append(part_X)   # store this part_X
+                surro.normalized_fold_y.append(part_y)
+                num_rest_samples=surro.normalized_X.shape[0]-self.samples_per_fold*(self.num_fold-1) #numnber of rest samples
+                part_X = np.zeros((num_rest_samples, surro.normalized_X.shape[1]))  # initialize according to the numnber of rest samples
+                part_y = np.zeros((num_rest_samples, surro.normalized_y.shape[1]))
+                ind=0  # initialize index of part_X, and will not run the following code:<if (ind==self.samples_per_fold)>
+                last_part_flag=1 # last part flag
+
+            if (count == surro.normalized_X.shape[0]): # all the samples has been stored
+                surro.normalized_fold_X.append(part_X) # store this part_X
+                surro.normalized_fold_y.append(part_y)
+                ind = 0  # initialize index of part_X,, and will not run the following code:<if (ind==self.samples_per_fold)>
+
+            if (ind==self.samples_per_fold) and not last_part_flag: # this part_X is full and is not the last part
+                surro.normalized_fold_X.append(part_X)   # store this part_X
+                surro.normalized_fold_y.append(part_y)
+                part_X = np.zeros((self.samples_per_fold, surro.normalized_X.shape[1]))  # must initialize again, or the values in normalized_fold_X will also change if part_X change
+                part_y = np.zeros((self.samples_per_fold, surro.normalized_y.shape[1]))
+                ind=0  # initialize index of part_X
+
+
+    # the following distance calculation code are from sampling_plan.py
+    def calculate_distance_phi(self,X,q=2,p=2):
+        """
+        Calculates the sampling plan quality criterion of Morris and Mitchell
+
+        Inputs:
+            X - Sampling plan
+            q - exponent used in the calculation of the metric (default = 2)
+            p - the distance metric to be used (p=1 rectangular - default , p=2 Euclidean)
+
+        Output:
+            Phiq - sampling plan 'space-fillingness' metric. the smaller Phiq, the space has better fillness
+        """
+        #calculate the distances between all pairs of points (using the p-norm) and build multiplicity array J
+        J,d = self.jd(X,p)
+        if d.min()==0:
+            print(d)
+        #the sampling plan quality criterion
+        Phiq = (np.sum(J*(d**(-q))))**(1.0/q)
+        return Phiq
+
+    def jd(self, X,p=2):
+        """
+        Computes the distances between all pairs of points in a sampling plan X using the p-norm, sorts them in ascending order and removes multiple occurences.
+
+        Inputs:
+            X-sampling plan being evaluated
+            p-distance norm (p=1 rectangular-default, p=2 Euclidean)
+        Output:
+            J-multiplicity array (that is, the number of pairs with the same distance value)
+            distinct_d-list of distinct distance values
+        """
+        #number of points in the sampling plan
+        n = np.size(X[:,0])
+
+        #computes the distances between all pairs of points
+        d = np.zeros((n*(n-1)//2))
+
+        # ind=0
+        # for i in range(n-1):
+        #     for j in range(i+1,n):
+        #         d[ind] = np.linalg.norm((X[i,:] - X[j,:]),p)
+        # ind+=1
+
+        #an alternative way of the above loop
+        list = [(i,j) for i in range(n-1) for j in range(i+1,n)]
+        for k,l in enumerate(list):
+            d[k] = np.linalg.norm((X[l[0],:]-X[l[1],:]),p)
+
+        #remove multiple occurences and sort in ascending order
+        distinct_d, J = np.unique(d, return_counts=True)
+
+        return J, distinct_d
+
+
+
+# e.g.
+if __name__ == '__main__':
+    # ==================================================
+    rootpath = r'C:\Users\tomjj\Desktop\demo'  # your saopy file path
+    import sys
+
+    sys.path.append(rootpath)  # you can directly import the modules in this folder
+    sys.path.append(rootpath + r'\saopy\surrogate_model')
+    sys.path.append(rootpath + r'\saopy')
+    # ==================================================
+    from saopy.surrogate_model.ANN import *
+    from saopy.surrogate_model.KRG import *
+    from saopy.surrogate_model.RBF import *
+    from saopy.surrogate_model.surrogate_model import *
+
+
+    lower_bound = [-32.768, -32.768]
+    upper_bound = [32.768, 32.768]
+    parallel_num = 3
+    num_fold = 3
+    surro_list = []
+    surro_list.append(ANN(num_layers=2, num_neurons=50))
+    # surro_list.append(RBF(num_centers=10))
+    # surro_list.append(KRG()) # may take longer training time
+    for surro in surro_list:
+        surro.load_data(lower_bound, upper_bound)
+        surro.normalize_all()
+    cros_valid = cross_validation.opt_test_data(surro_list, num_fold=num_fold)
+    cros_valid.divide()
+    best_ind = cros_valid.begin_cross_validation(parallel_num, plot_flag=1)  # get best model index
+    # best_surro = surro_list[best_ind]  # get best model
+    # best_surro.train(best_surro.normalized_X, best_surro.normalized_y)  # train again using all samples
+    # save_obj(best_surro, 'best_surro')  # save best model

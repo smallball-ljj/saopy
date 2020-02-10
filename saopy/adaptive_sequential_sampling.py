@@ -56,11 +56,11 @@ class ass():
             exploit.plot(self.plot_y_range,self.outer_iter)
 
         # exploration
-        explorat = exp_fullfactorial()
-        # explorat = exp_random_lhs()
+        # explorat = exp_fullfactorial()
+        explorat = exp_random_lhs()
         explorat.load_data(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, file_X='X.csv')
         explorat.normalize_X()
-        explorat.generate_candidate_points(100)
+        explorat.generate_candidate_points(1000000)
         explorat.generate_exploration_X(number_exploration_X, self.outer_iter, self.plot_flag)
 
         # stack three categories and remove duplicate points
