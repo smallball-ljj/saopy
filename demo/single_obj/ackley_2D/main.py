@@ -75,7 +75,7 @@ if __name__ == '__main__':
         # surro_list.append(RBF(num_centers=10))
         # surro_list.append(KRG()) # may take longer training time
         for surro in surro_list:
-            surro.load_data(lower_bound, upper_bound)
+            surro.load_data(lower_bound, upper_bound,'X.csv','y0.csv')
             surro.normalize_all()
         cros_valid=cross_validation.random(surro_list,num_fold=num_fold)
         cros_valid.divide()
