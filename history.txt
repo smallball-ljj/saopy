@@ -1,5 +1,9 @@
 Version History
 
+2020.4.26 : v1.0.1 - add RBF_smt (RBF built from smt package), and change the original 'RBF' to 'RBF_pytorch'. Note: RBF_smt, which solve linear equation, is the interpolating function; RBF_pytorch, which use back propagation, is not the interpolating function
+    ||
+2020.4.26 : v1.0.1 - add plot_train_history in KRG, and some parameters to control the training time and convergence for KRG
+    ||
 2020.2.10 : v1.0.1 - add detailed CFD (using python to call CATIA, pointwise)
     ||
 2020.2.9 : v1.0.1 - add optimal test data in cross_validation

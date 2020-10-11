@@ -4,6 +4,8 @@ matplotlib>=3.0.0
 
 scipy>=1.0.0
 
-geatpy>=2.2.3
+geatpy=2.2.3 (there are big changes in the newest version 2.5.0, which has not been tested, you'd better use 2.2.3)
 
-pytorch>=1.3.1(if you want to use ANN or RBF)
+pytorch>=1.3.1(if you want to use ANN or RBF_pytorch)
+
+smt>=0.4.3(if you want to use RBF_smt)
