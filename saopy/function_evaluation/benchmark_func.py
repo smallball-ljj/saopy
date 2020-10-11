@@ -114,17 +114,17 @@ class benchmark_func():
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.xlabel('x' + str(i+1), fontXY)
+                        plt.ylabel('x' + str(j+1), fontXY)
                     elif row_ind == 0 and col_ind != 0:  # first row, plot x axis label
                         plt.yticks([])
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
+                        plt.xlabel('x' + str(i+1), fontXY)
                     elif col_ind == 0 and row_ind != 0:  # first column, plot y axis label
                         plt.xticks([])
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.ylabel('x' + str(j+1), fontXY)
                     else:  # other subplot, do not show x,y axis label
                         plt.xticks([])
                         plt.yticks([])
@@ -137,14 +137,15 @@ class benchmark_func():
                 plt.axis('off') # do not plot axis
 
             if y_range == []:  # plot according to y range
-                cbar = plt.colorbar(cont)  # plot color bar
+                # cbar = plt.colorbar(cont)  # plot color bar
+                pass
             else:  # plot color bar according to given range
-                cbar = plt.colorbar(cont,ticks=np.arange(y_range[0], y_range[1] + y_range[2]/2, y_range[2]).tolist())  # plot color bar #bug: np.arange(15,20.1,0.1)
-
-            fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, } # colorbar label size
-            axisfont = 20  # axis number size
-            cbar.ax.set_ylabel('y', fontC)  # color bar label
-            cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
+                t = np.arange(y_range[0], y_range[1] + y_range[2] / 2, y_range[2])
+                cbar = plt.colorbar(cont, ticks=t.tolist())  # plot color bar #bug: np.arange(15,20.1,0.1)
+                fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, }  # colorbar label size
+                axisfont = 20  # axis number size
+                cbar.ax.set_ylabel('y', fontC)  # color bar label
+                cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
 
             # font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
             # plt.legend(handles=[p1], labels=['training samples'], loc='best', edgecolor='black', prop=font)
@@ -192,7 +193,7 @@ class benchmark_func():
 
         if y_range == []:  # plot contour according to y range
             cont = plt.contourf(X1, X2, y, 50, cmap=cmaps)
-            # cbar = plt.colorbar(cont)  # plot color bar
+            cbar = plt.colorbar(cont)  # plot color bar
 
         else:  # plot contour according to given range
             y[y < y_range[0]] = y_range[0]  # assgin any y, which is smaller than the given lower boundary, to lower boundary
@@ -390,6 +391,15 @@ class shubert(benchmark_func):
         self.y.resize((self.y.shape[0], 1))
         return self.y
 
+class test1(benchmark_func):
+    """
+    dimension=1
+    x range: [-1,1]
+    """
+    def calculate(self,X):
+        self.y=X[:,0]**2+0.5*X[:,1]
+        self.y.resize((self.y.shape[0], 1))
+        return self.y
 
 # ==================================================
 # detailed definition of benchmark functions (used for multi objective optimization)
@@ -464,7 +474,7 @@ class ZDT3_obj1(benchmark_func):
 
 class DTLZ1_obj0(benchmark_func):
     """
-    dimension=7
+    dimension>=2
     x range: [0,1]
     """
     def calculate(self, X):
@@ -511,11 +521,41 @@ class DTLZ1_m_obj2(benchmark_func):
         self.y.resize((self.y.shape[0], 1))
         return self.y
 
+class DTLZ1_m2_obj0(benchmark_func):
+    """
+    dimension>=2
+    x range: [0,1]
+
+    note: reduced cosine part in DTLZ1, which is simpler and don't has many local minimum
+    """
+    def calculate(self, X):
+        M = 3
+        XM = X[:, (M - 1):].copy()
+        g = 100 * (XM.shape[1] + np.sum(((XM - 0.5) ** 2), 1, keepdims=True))
+        self.y = 0.5*X[:,[0]]*X[:,[1]]*(1+g)
+        self.y.resize((self.y.shape[0], 1))
+        return self.y
+class DTLZ1_m2_obj1(benchmark_func):
+    def calculate(self, X):
+        M = 3
+        XM = X[:, (M - 1):].copy()
+        g = 100 * (XM.shape[1] + np.sum(((XM - 0.5) ** 2), 1, keepdims=True))
+        self.y = 0.5*X[:,[0]]*(1-X[:,[1]])*(1+g)
+        self.y.resize((self.y.shape[0], 1))
+        return self.y
+class DTLZ1_m2_obj2(benchmark_func):
+    def calculate(self, X):
+        M = 3
+        XM = X[:, (M - 1):].copy()
+        g = 100 * (XM.shape[1] + np.sum(((XM - 0.5) ** 2), 1, keepdims=True))
+        self.y = 0.5*(1-X[:,[0]])*(1+g)
+        self.y.resize((self.y.shape[0], 1))
+        return self.y
 
 
 # e.g.
 if __name__ == '__main__':
-    dimension=2
+    dimension=5
 
     # lower_bound = [-32.768]*dimension # ackley
     # upper_bound = [32.768]*dimension
@@ -544,8 +584,8 @@ if __name__ == '__main__':
     # lower_bound = [-500]*dimension # schwefel
     # upper_bound = [500]*dimension
 
-    lower_bound = [-10]*dimension # shubert
-    upper_bound = [10]*dimension
+    lower_bound = [0]*dimension # shubert
+    upper_bound = [1]*dimension
 
     # f = ackley(dimension)
     # f = sphere(dimension)
@@ -558,10 +598,11 @@ if __name__ == '__main__':
     # f = rastrigin(dimension)
     # f = rosenbrock(dimension)
     # f = schwefel(dimension)
-    f = shubert(dimension)
+    # f = shubert(dimension)
+    f = DTLZ1_m2_obj0(dimension)
 
 
     # X = f.read_csv_to_np('output_sampling_plan.csv')
     # f.calculate(X)
     # f.output('output_func.csv')
-    f.plot(lower_bound, upper_bound,[])
+    f.plot(lower_bound, upper_bound,[0,80,10])
