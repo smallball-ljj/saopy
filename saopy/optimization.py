@@ -32,7 +32,11 @@ class MyProblem(ea.Problem): # used in optimization.optimize() , see demo of gea
                 pop.ObjV = np.hstack((pop.ObjV, y))
 
 
-        # pop.CV = np.hstack([2 - x1 - x2, x1 + x2 - 6]) # constraint templet
+        # constraint templet
+        # x1 = X[:, [0]]
+        # x2 = X[:, [1]]
+        # x3 = X[:, [2]]
+        # pop.CV = np.hstack([x3-x2])
 
 
 
@@ -144,8 +148,55 @@ class optimization():
             plt.savefig('optimization_' + str(save_ind) + '.eps')
             plt.close()
 
-        else:  # multi objective
+        elif self.M == 2:  # 2 objective
             pass # to be continued
+
+        elif self.M == 3:  # 3 objective
+            y_opt = np.loadtxt('Result/ObjV.csv', delimiter=',')
+            y0_opt = y_opt[:, 0]
+            y1_opt = y_opt[:, 1]
+            y2_opt = y_opt[:, 2]
+
+            fig = plt.figure(figsize=(10, 8))
+            grid = plt.GridSpec(4, 2, wspace=0.5, hspace=0.8)
+
+            # 3D pareto front
+            ax = fig.add_subplot(grid[0:2, 0], projection='3d')
+            ax.scatter(y0_opt, y1_opt, y2_opt, marker='o', c='black')
+            ax.set_zlabel('F3', fontdict={'size': 20, 'color': 'black'})
+            ax.set_ylabel('F2', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            ax.view_init(elev=30, azim=30)  # view angle
+
+            # ax1 = plt.gca() # scientific notation
+            # ax1.xaxis.get_major_formatter().set_powerlimits((0, 1))  # scientific notation
+            # ax1.yaxis.get_major_formatter().set_powerlimits((0, 1)) # scientific notation
+            # ax1.zaxis.get_major_formatter().set_powerlimits((0, 1))  # scientific notation
+
+            # y0 vs y1
+            ax = fig.add_subplot(grid[0:2, 1])
+            ax.scatter(y0_opt, y1_opt, marker='o', c='black')
+            ax.set_ylabel('F2', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            plt.tick_params(labelsize=20)
+            # y0 vs y2
+            ax = fig.add_subplot(grid[2:4, 0])
+            ax.scatter(y0_opt, y2_opt, marker='o', c='black')
+            ax.set_ylabel('F3', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            plt.tick_params(labelsize=20)
+            # y1 vs y2
+            ax = fig.add_subplot(grid[2:4, 1])
+            ax.scatter(y1_opt, y2_opt, marker='o', c='black')
+            ax.set_ylabel('F3', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('F2', fontdict={'size': 20, 'color': 'black'})
+            plt.tick_params(labelsize=20)
+
+            plt.subplots_adjust(top=0.95) # remove top blank
+            # plt.subplots_adjust(top=1, bottom=0, right=0.93, left=0, hspace=0, wspace=0)
+            # plt.show()
+            plt.savefig('optimization.eps')
+            plt.close()
 
 
 
@@ -153,7 +204,7 @@ class optimization():
 # e.g.
 if __name__ == '__main__':
     # ==================================================
-    rootpath = r'C:\Users\tomjj\Desktop\demo'  # your saopy file path
+    rootpath = r'D:\ljj\aa\demo'  # your saopy file path
     import sys
     sys.path.append(rootpath)  # you can directly import the modules in this folder
     sys.path.append(rootpath + r'\saopy\surrogate_model')
@@ -161,8 +212,8 @@ if __name__ == '__main__':
     # ==================================================
     from saopy.function_evaluation.benchmark_func import *
     from saopy.surrogate_model.ANN import *
-    from saopy.surrogate_model.KRG import *
-    from saopy.surrogate_model.RBF import *
+    # from saopy.surrogate_model.KRG import *
+    # from saopy.surrogate_model.RBF import *
     from saopy.surrogate_model.surrogate_model import *
 
 
@@ -209,15 +260,16 @@ if __name__ == '__main__':
         opt.plot()
 
     else: # multi object demo
-        dimension = 7
+        dimension = 5
 
         lower_bound = [0]*dimension
         upper_bound = [1]*dimension
 
         f_list = []
         # f_list.append(load_obj('best_surro'))  # optimize using surrogate model
-        f_list.append(DTLZ1_obj0())  # optimize using real function
-        f_list.append(DTLZ1_obj1())  # optimize using real function
-        f_list.append(DTLZ1_obj2())  # optimize using real function
-        opt = optimization(lower_bound, upper_bound, f_list, max_gen=500, pop_size=100)
+        f_list.append(DTLZ1_m2_obj0())  # optimize using real function
+        f_list.append(DTLZ1_m2_obj1())  # optimize using real function
+        f_list.append(DTLZ1_m2_obj2())  # optimize using real function
+        opt = optimization(lower_bound, upper_bound, f_list, max_gen=500, pop_size=10)
         opt.optimize()
+        opt.plot()

@@ -40,9 +40,9 @@ class ass():
 
     def generate_new_X(self,number_optimized_X,number_exploitation_X,number_exploration_X):
         # optimization
-        opt = optimization(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, self.surro_list, max_gen=500, pop_size=number_optimized_X)
+        opt = optimization(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, self.surro_list, max_gen=2000, pop_size=number_optimized_X)
         last_population = opt.optimize()
-        if self.plot_flag==1:
+        if self.plot_flag==0:
             opt.plot(self.outer_iter)
         if os.path.exists('Result_'+str(self.outer_iter)) == False:
             os.makedirs('Result_'+str(self.outer_iter))
@@ -81,13 +81,13 @@ class ass():
 
 
     def load_data(self):
-        self.optimized_X = self.read_csv_to_np('Result/Phen.csv')
-
         if len(self.surro_list)==1: # single objective, stack the best variable, for validation and comparison with best_ObjV.csv
             best_var = self.read_csv_to_np('best_var.csv')
-            self.optimized_X = np.vstack((self.optimized_X, best_var[self.outer_iter,:]))
+            self.optimized_X = np.array([best_var[self.outer_iter, :]])
+        else:  # multi objective, stack all the samples on the pareto front
+            self.optimized_X = self.read_csv_to_np('Result/Phen.csv')
+            self.optimized_X = np.unique(self.optimized_X,axis=0)  # note: the samples in 'Result/Phen.csv' may be duplicate, so we remove it, otherwise calculate_distance_phi() will get infinite value
 
-        self.optimized_X = np.unique(self.optimized_X, axis=0) # note: the samples in 'Result/Phen.csv' may be duplicate, so we remove it, otherwise calculate_distance_phi() will get infinite value
         self.exploitation_X = self.read_csv_to_np('X_exploitation.csv')
         self.exploration_X = self.read_csv_to_np('X_exploration.csv')
 
