@@ -137,7 +137,7 @@ class surrogate_model():
         pass
 
 
-    def plot(self, lower_bound, upper_bound, y_range=[], rest_var=None, show_flag=1, sample_flag=1, outer_iter=0):
+    def plot(self, lower_bound, upper_bound, y_range=[], x_label=None, y_label='y', rest_var=None, show_flag=1, sample_flag=1, outer_iter=0):
         """
         plot response surface
 
@@ -146,7 +146,11 @@ class surrogate_model():
         :param y_range: 1. if y_range==[], plot y according to calculated max range of y (default)
                         2. plot y acoording to given range: y_range=[lower boundary, upper boundary, step]
                         e.g. y_range=[0,10,1]
+        :param x_label: 1. if x_label==None, plot x label like 'x0, x1, x2 ...' (default)
+                        2. plot x label acoording to given label
+                        e.g. x_label=['length', 'height']
         :param rest_var: available for dimension>=3. note: the response surface is plotted over the two selected variables, so the rest varible will keep the same value
+                          if rest_var==None, the rest variables are set as the mid point of lower_bound and upper_bound by default
         :param show_flag: if show_flag==1, show the plot (default)
                           if show_flag==0, do not show the plot (which will return plt, for other class to call it (e.g. see exploitation.py)
         :param sample_flag: if sample_flag==1, show all the samples (default)
@@ -195,6 +199,12 @@ class surrogate_model():
         # multi dimension
         # ==================================================
         elif dimension >= 2:
+            # assgin x label if not given
+            if x_label == None:
+                x_label=[]
+                for i in range(dimension):
+                    x_label.append('x'+str(i))
+
             fig = plt.figure(figsize=(10, 7.5))  # figure size
             for i in range(dimension):
                 for j in range(dimension-1, i, -1):
@@ -204,23 +214,23 @@ class surrogate_model():
                     plt.subplot(dimension - 1, dimension - 1, ind) # locate subplot
                     cont, p1=self.plot_md(i, j, lower_bound, upper_bound, y_range, rest_var, show_flag_md=0, sample_flag=sample_flag) # plot response surface in subplot
                     # plot axis label
-                    fontXY = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }  # xy label size
-                    axisfont = 20  # axis number size
+                    fontXY = {'family': 'Times New Roman', 'weight': 'normal', 'size': 35, }  # xy label size
+                    axisfont = 25  # axis number size
                     if row_ind == 0 and col_ind == 0:  # first subplot, plot both axis
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.xlabel(x_label[i], fontXY)
+                        plt.ylabel(x_label[j], fontXY)
                     elif row_ind == 0 and col_ind != 0:  # first row, plot x axis label
                         plt.yticks([])
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
+                        plt.xlabel(x_label[i], fontXY)
                     elif col_ind == 0 and row_ind != 0:  # first column, plot y axis label
                         plt.xticks([])
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.ylabel(x_label[j], fontXY)
                     else:  # other subplot, do not show x,y axis label
                         plt.xticks([])
                         plt.yticks([])
@@ -234,18 +244,24 @@ class surrogate_model():
 
             if y_range == []:  # plot according to y range
                 cbar = plt.colorbar(cont)  # plot color bar
+                fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 35, }  # colorbar label size
+                axisfont = 25  # axis number size
+                cbar.ax.set_ylabel(y_label, fontC)  # color bar label
+                cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
+                # pass
             else:  # plot color bar according to given range
-                cbar = plt.colorbar(cont,ticks=np.arange(y_range[0], y_range[1] + y_range[2]/2, y_range[2]).tolist())  # plot color bar #bug: np.arange(15,20.1,0.1)
-
-            fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, } # colorbar label size
-            axisfont = 20  # axis number size
-            cbar.ax.set_ylabel('y', fontC)  # color bar label
-            cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
+                t=np.arange(y_range[0], y_range[1] + y_range[2] / 2, y_range[2])
+                cbar = plt.colorbar(cont,ticks=t.tolist())  # plot color bar #bug: np.arange(15,20.1,0.1)
+                fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 35, } # colorbar label size
+                axisfont = 25  # axis number size
+                cbar.ax.set_ylabel(y_label, fontC)  # color bar label
+                cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
 
             # font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
             # plt.legend(handles=[p1], labels=['training samples'], loc='best', edgecolor='black', prop=font)
 
         if show_flag == 1:
+            plt.subplots_adjust(top=0.85, bottom=0.05, right=0.9, left=0.2) # adjust side blank size
             # plt.show()
             plt.savefig('plot/surrogate_model_'+str(outer_iter)+'.eps')
             plt.close()
@@ -318,3 +334,30 @@ class surrogate_model():
         else:
             if show_flag_md == 1: plt.show()
             return cont,None
+
+
+
+if __name__ == '__main__':
+    # ==================================================
+    rootpath = r'D:\ljj\aa\demo'  # your saopy file path
+    import sys
+
+    sys.path.append(rootpath)  # you can directly import the modules in this folder
+    sys.path.append(rootpath + r'\saopy\surrogate_model')
+    sys.path.append(rootpath + r'\saopy')
+    # ==================================================
+    from saopy.surrogate_model.ANN import *
+    # from saopy.surrogate_model.KRG import *
+    # from saopy.surrogate_model.RBF import *
+    from saopy.surrogate_model.surrogate_model import *
+
+    dimension = 5
+    lower_bound = [0] * dimension
+    upper_bound = [1] * dimension
+    # plot_y_range = [0,54,10]
+    plot_y_range=[]
+    x_label=['x1','x2','x3','x4','x5']
+
+    best_surro=load_obj('best_surro0')
+    best_surro.plot(lower_bound, upper_bound, plot_y_range, x_label=x_label,outer_iter=0, sample_flag=0)  # plot response surface
+    # print(best_surro.calculate(np.array([[0.1,0.2,0.3,0.4,0.5,0.6,0.7]]))) # calculate a certain point

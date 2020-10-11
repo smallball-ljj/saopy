@@ -16,6 +16,7 @@ from surrogate_model import *
 import cross_validation
 import csv
 import numpy as np
+import os
 
 
 """
@@ -122,14 +123,18 @@ class ANN(surrogate_model):
         # ==================================================
 
 
-    def train(self, X_train, y_train, plot_loss=0):
+    def train(self, X_train, y_train, plot_train_history=0, epoch=10000):
+        '''
+        :param X_train,y_train: normalized training data
+        :param plot_train_history: whether or not plot tran history. plot_train_history=0: not plot; plot_train_history=1:plot
+        :param epoch: total training epoch. the larger the epoch, the longer training time. user should judge the value by the convergence of plot_train_history
+        '''
         self.fcnn = FCNN(input_shape=X_train.shape[1], num_layers=self.num_layers, neurons=self.neurons)  # instantiate FCNN
 
         loss_criterion=nn.MSELoss() # use mean squared error loss
         if (self.fcnn.optimizer_id == 0): # for comparison of different optimizer, visit: https://blog.csdn.net/qq_35082030/article/details/73368962
             optimizer = torch.optim.Adadelta(self.fcnn.parameters())
 
-        epoch=10000
         loss_history=[]
         for iter in range(0, epoch):
             optimizer.zero_grad() # zero the gradient, or it will be accumulated
@@ -143,10 +148,14 @@ class ANN(surrogate_model):
             # if (iter % 100 == 0):
             #     print(loss)
 
-        if plot_loss==1:
+        if plot_train_history==1:
+            if os.path.exists('plot') == False:
+                os.makedirs('plot')
             plt.plot(range(1,epoch+1),loss_history)
             plt.xlabel('epoch')
             plt.ylabel('MSE of training data')
+            plt.savefig('plot/ANN_train_history.png')
+            plt.close()
 
 
     def calculate(self, X):
@@ -187,7 +196,7 @@ def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons
     for surro in surro_list:
         surro.load_data(lower_bound, upper_bound, file_X, file_y)
         surro.normalize_all()
-    cros_valid=cross_validation.opt_test_data(surro_list,num_fold=num_fold)
+    cros_valid=cross_validation.random(surro_list,num_fold=num_fold)
     cros_valid.divide()
     best_ind = cros_valid.begin_cross_validation(parallel_num) # get best model index
     best_surro = surro_list[best_ind] # get best model with minimum RMSE
@@ -211,11 +220,14 @@ def get_best_arch_plot_RMSE(max_layers,max_neurons,step,save_ind):
         RMSE = RMSE_mean[start_ind:end_ind]
         plt.plot(range(1,max_neurons+1,step),RMSE,marker=marker_list[num_layers],c=color_list[num_layers])
 
-    plt.tick_params(labelsize=20)  # axis number size
-    font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 20, }
+    plt.tick_params(labelsize=40)  # axis number size
+    font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 40, }
+    font2 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
     plt.xlabel('Number of neurons per layer', font)
-    plt.ylabel('Average RMSE of all fold of testing data', font)
-    plt.legend(labels=label_list, loc='best', edgecolor='black', prop=font)
+    plt.ylabel('Average RMSE of all trials', font)
+    plt.legend(labels=label_list, loc='best', edgecolor='black', prop=font2)
+    # plt.ylim(0.08,0.22)
+    plt.subplots_adjust(top=0.95, bottom=0.2, right=0.95, left=0.25)
     # plt.show()
     plt.savefig('RMSE_mean_ANN_arch_'+str(save_ind)+'.eps')
     plt.close()

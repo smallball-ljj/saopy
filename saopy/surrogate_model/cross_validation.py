@@ -41,6 +41,7 @@ import csv
 import numpy as np
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import MultipleLocator
 
 
 class cross_validation():
@@ -200,18 +201,37 @@ class cross_validation():
 
 
     def plot(self,y_train,y_train_pred,y_test,y_test_pred,surro,i):
-        font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
+        font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 40, }
+        font2 = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
         plt.figure(figsize=(10, 8))
         plt.xlabel('Ground Truth', font)
         plt.ylabel('Predicted Value', font)
         plt.xlim(surro.y_min, surro.y_max)
         plt.ylim(surro.y_min, surro.y_max)
+
+        # x_major_locator = MultipleLocator(5)  # 把x轴的刻度间隔设置为1，并存在变量里
+        # ax = plt.gca()
+        # ax.xaxis.set_major_locator(x_major_locator)
+        # ax.yaxis.set_major_locator(x_major_locator)
+
+        # plt.xlim(0.01, 0.11)
+        # plt.ylim(0.01, 0.11)
+
         plt.plot(np.arange(surro.y_min, surro.y_max+(surro.y_max-surro.y_min)/10,(surro.y_max-surro.y_min)/10), np.arange(surro.y_min, surro.y_max+(surro.y_max-surro.y_min)/10,(surro.y_max-surro.y_min)/10), c='black', lw=2)
+
+        # plt.plot([0,100],[0,100], c='black', lw=2)
+
         p_train = plt.scatter(y_train, y_train_pred, s=50, marker='o', c='none', edgecolors='black')
         p_test = plt.scatter(y_test, y_test_pred, s=50, marker='x', c='black')
-        plt.tick_params(labelsize=25) # axis number size
-        plt.legend(handles=[p_train, p_test], labels=['Training Data Set', 'Testing Data Set'], loc='best',
-                   edgecolor='black', prop=font)
+        plt.tick_params(labelsize=40) # axis number size
+        plt.legend(handles=[p_train, p_test], labels=['Training Data Set', 'Validation Data Set'], loc='best',
+                   edgecolor='black', prop=font2)
+
+        # ax1 = plt.gca()  # scientific notation
+        # ax1.xaxis.get_major_formatter().set_powerlimits((0, 1))  # scientific notation
+        # ax1.yaxis.get_major_formatter().set_powerlimits((0, 1))  # scientific notation
+        plt.subplots_adjust(top=0.95, bottom=0.18, right=0.95, left=0.18)
+
         # plt.show()
         plt.savefig('plot/pred_true_compare_'+str(i)+'.eps')
         plt.close()

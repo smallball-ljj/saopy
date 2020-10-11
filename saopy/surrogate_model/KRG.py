@@ -16,7 +16,7 @@ from time import time
 import math as m
 
 from surrogate_model import surrogate_model
-
+import matplotlib.pyplot as plt
 
 class matrixops():
     def __init__(self):
@@ -77,10 +77,16 @@ class KRG(matrixops,surrogate_model):
         surrogate_model.__init__(self)
 
 
-    def train(self, X_train, y_train, optimizer='pso'):
+    def train(self, X_train, y_train, optimizer='pso', plot_train_history=0, dif_decimals=3, no_change_fitness_gen=5):
         '''
         The function trains the hyperparameters of the Kriging model.
+        :param X_train,y_train: normalized training data
         :param optimizer: Two optimizers are implemented, a Particle Swarm Optimizer or a GA
+        :param plot_train_history: whether or not plot tran history. plot_train_history=0: not plot; plot_train_history=1:plot
+
+        :param dif_decimals: fitness decimals for comparision between the previous generations and the current generations. the larger the value, the longer training time, the better convergence
+        :param no_change_fitness_gen: the number of generations allowed for no change in fitness. the larger the value, the longer training time, the better convergence
+        please refer to no_improvement_termination() for more information about these two parameters
         '''
         self.n = X_train.shape[0]
         self.k = X_train.shape[1]
@@ -113,6 +119,11 @@ class KRG(matrixops,surrogate_model):
         rand = Random()
         rand.seed(int(time()))
 
+        # begin training the model
+        self.dif_decimals=dif_decimals
+        self.no_change_fitness_gen=no_change_fitness_gen
+        self.fitness_min=[] # append minimum fitness value in this population for plot
+
         # If the optimizer option is PSO, run the PSO algorithm
         if optimizer == 'pso':
             ea = inspyred.swarm.PSO(Random())
@@ -121,7 +132,7 @@ class KRG(matrixops,surrogate_model):
             # ea.observer = inspyred.ec.observers.stats_observer
             final_pop = ea.evolve(generator=self.generate_population,
                                   evaluator=self.fittingObjective,
-                                  pop_size=300,
+                                  pop_size=50,
                                   maximize=False,
                                   bounder=ec.Bounder(lowerBound, upperBound),
                                   max_evaluations=30000,
@@ -142,6 +153,16 @@ class KRG(matrixops,surrogate_model):
                                   max_evaluations=30000,
                                   num_elites=10,
                                   mutation_rate=.05)
+
+        # plot_train_history
+        if plot_train_history==1:
+            plt.plot(range(1,len(self.fitness_min)+1),self.fitness_min)
+            plt.xlabel('iteration')
+            plt.ylabel('fitness')
+            plt.savefig('plot/KRG_train_history.eps')
+
+
+
 
         # This code updates the model with the hyperparameters found in the global search
         for entry in final_pop:
@@ -211,10 +232,13 @@ class KRG(matrixops,surrogate_model):
         - *max_generations* -- the number of generations allowed for no change in fitness (default 10)
 
         """
-        max_generations = args.setdefault('max_generations', 10)
+        max_generations = args.setdefault('max_generations', self.no_change_fitness_gen)
         previous_best = args.setdefault('previous_best', None)
         max_evaluations = args.setdefault('max_evaluations', 30000)
-        current_best = np.around(max(population).fitness, decimals=4)
+        current_best = np.around(max(population).fitness, decimals=self.dif_decimals)
+
+        print('training KRG, num_evaluations/max_evaluations:', num_evaluations, '/', max_evaluations)
+
         if previous_best is None or previous_best != current_best:
             args['previous_best'] = current_best
             args['generation_count'] = 0
@@ -249,6 +273,9 @@ class KRG(matrixops,surrogate_model):
                 # print Exception, e
                 f = 10000
             fitness.append(f)
+
+        self.fitness_min.append((np.array(fitness).min())) # append minimum fitness value in this population for plot
+
         return fitness
 
     def fittingObjective_local(self,entry):
