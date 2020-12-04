@@ -238,15 +238,18 @@ class exploration():
             # colorbar label size
             fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, }
             axisfont = 20  # axis number size
-            plt.xlabel('x1', fontXY)
-            plt.ylabel('x2', fontXY)
+            ax = plt.gca()
+            ax.xaxis.set_ticks_position('top')
+            ax.xaxis.set_label_position('top')
+            plt.xlabel('$x_1$', fontXY)
+            plt.ylabel('$x_2$', fontXY)
             plt.tick_params(labelsize=axisfont)  # axis number size
             cbar.ax.set_ylabel('intersite distance', fontC)  # color bar label
             cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
 
             plt.scatter(self.normalized_X_original[:, 0], self.normalized_X_original[:, 1], s=5, marker='o', c='black') # plot scatter of all original samples X
-            plt.scatter(self.exploration_X[:, 0], self.exploration_X[:, 1], s=50, marker='s', c='none', edgecolors='black') # plot scatter of all exploration X
-            plt.scatter(self.new_point[0], self.new_point[1], s=50, marker='s', c='black') # plot new point generated this time
+            plt.scatter(self.exploration_X[:, 0], self.exploration_X[:, 1], s=500, marker='s', c='white', edgecolors='white') # plot scatter of all exploration X
+            plt.scatter(self.new_point[0], self.new_point[1], s=500, marker='s', c='black') # plot new point generated this time
             plt.xlim(0,1)
             plt.ylim(0,1)
 
@@ -281,12 +284,12 @@ class exp_random_lhs(exploration):
 
 # e.g.
 if __name__ == '__main__':
-    lower_bound = [-32.768, -32.768]
-    upper_bound = [32.768, 32.768]
+    lower_bound = [-2*np.pi, -2*np.pi]
+    upper_bound = [2*np.pi, 2*np.pi]
 
     explorat = exp_fullfactorial()
     # explorat=exp_random_lhs()
-    explorat.load_data(lower_bound, upper_bound, file_X=r'demo\single_obj\ackley_2D\X.csv')
+    explorat.load_data(lower_bound, upper_bound, file_X=r'demo\benchmark_surrogate_compare\easom_2D_ANN\X.csv')
     explorat.normalize_X()
     explorat.generate_candidate_points(100)
-    explorat.generate_exploration_X(10, outer_iter=0,plot_flag=1)
+    explorat.generate_exploration_X(6, outer_iter=0,plot_flag=1)

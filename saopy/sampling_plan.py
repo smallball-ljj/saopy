@@ -121,17 +121,17 @@ class sampling_plan():
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     elif row_ind == 0 and col_ind != 0:  # first row, plot x axis label
                         plt.yticks([])
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
                     elif col_ind == 0 and row_ind != 0:  # first column, plot y axis label
                         plt.xticks([])
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     else:  # other subplot, do not show x,y axis label
                         plt.xticks([])
                         plt.yticks([])
@@ -150,7 +150,7 @@ class sampling_plan():
 
         e.g. x1_arg=0, x2_arg=3, it will plot the scatter with the first and the fourth parameters as variables
         """
-        plt.scatter(self.X[:, x1_arg], self.X[:, x2_arg], s=5, marker='o', c='black')  # scatter of all samples X
+        plt.scatter(self.X[:, x1_arg], self.X[:, x2_arg], s=50, marker='o', c='black')  # scatter of all samples X
 
 
 
@@ -437,20 +437,20 @@ class optimal_lhs(sampling_plan):
 
 # e.g.
 if __name__ == '__main__':
-    lower_bound = [-32.768, -32.768]
-    upper_bound = [32.768, 32.768]
+    lower_bound = [0,0]
+    upper_bound = [1,1]
 
-    # a=fullfactorial(6,2)
-    # a.begin_sampling()
+    a=fullfactorial(5,2)
+    a.begin_sampling()
 
     # a = random_lhs(40,2)
     # a.begin_sampling()
 
-    a=optimal_lhs(40,2)
-    a.begin_sampling(2,30,100,[2])
+    # a=optimal_lhs(40,2)
+    # a.begin_sampling(population=30, iterations=100)
 
     a.inverse_norm(lower_bound, upper_bound)
 
     a.output('output_sampling_plan.csv')
 
-    a.plot()
+    a.plot(lower_bound, upper_bound)

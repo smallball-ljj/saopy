@@ -4,6 +4,8 @@
 # ==================================================
 # modified by luojiajie
 # ==================================================
+# !!note: minimize objective by default, you can change <self.maxormins> if you want maximize
+# ==================================================
 
 import os
 import csv
@@ -57,7 +59,7 @@ class optimization():
         self.ubin = [1] * self.Dim # 0 means not include variable upper boundary, 1 means include variable upper boundary
 
 
-        self.initial_Phen=initial_Phen # initial samples for optimization
+        self.initial_Phen=initial_Phen # initial samples for optimization (this function has not been completed yet)
 
 
     def read_csv_to_np(self,file_name):
@@ -94,7 +96,7 @@ class optimization():
 
         myAlgorithm.MAXGEN = self.MAXGEN  # 最大进化代数
         myAlgorithm.recOper.XOVR = 0.7  # 交叉概率
-        myAlgorithm.mutOper.Pm = 1  # 变异概率
+        myAlgorithm.mutOper.Pm = 1  # 变异概率(换算成标准变异概率为0.025)
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
         """==========================调用算法模板进行种群进化======================="""
         if self.M == 1: # single objective
@@ -148,10 +150,24 @@ class optimization():
             plt.savefig('optimization_' + str(save_ind) + '.eps')
             plt.close()
 
-        elif self.M == 2:  # 2 objective
-            pass # to be continued
+        elif self.M == 2:  # 2 objective (plot pareto front, you can test different generation values to see whether it converges)
+            y_opt = np.loadtxt('Result/ObjV.csv', delimiter=',')
+            y0_opt = y_opt[:, 0]
+            y1_opt = y_opt[:, 1]
 
-        elif self.M == 3:  # 3 objective
+            fig = plt.figure(figsize=(10, 8))
+
+            plt.scatter(y0_opt, y1_opt, marker='o', c='black')
+            plt.ylabel('$Obj_2$', fontdict={'size': 20, 'color': 'black'})
+            plt.xlabel('$Obj_1$', fontdict={'size': 20, 'color': 'black'})
+            plt.tick_params(labelsize=20)
+
+            # plt.subplots_adjust(top=1, bottom=0, right=0.93, left=0, hspace=0, wspace=0)
+            # plt.show()
+            plt.savefig('optimization.eps')
+            plt.close()
+
+        elif self.M == 3:  # 3 objective (plot pareto front, you can test different generation values to see whether it converges)
             y_opt = np.loadtxt('Result/ObjV.csv', delimiter=',')
             y0_opt = y_opt[:, 0]
             y1_opt = y_opt[:, 1]
@@ -163,9 +179,9 @@ class optimization():
             # 3D pareto front
             ax = fig.add_subplot(grid[0:2, 0], projection='3d')
             ax.scatter(y0_opt, y1_opt, y2_opt, marker='o', c='black')
-            ax.set_zlabel('F3', fontdict={'size': 20, 'color': 'black'})
-            ax.set_ylabel('F2', fontdict={'size': 20, 'color': 'black'})
-            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            ax.set_zlabel('$Obj_3$', fontdict={'size': 20, 'color': 'black'})
+            ax.set_ylabel('$Obj_2$', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('$Obj_1$', fontdict={'size': 20, 'color': 'black'})
             ax.view_init(elev=30, azim=30)  # view angle
 
             # ax1 = plt.gca() # scientific notation
@@ -176,20 +192,20 @@ class optimization():
             # y0 vs y1
             ax = fig.add_subplot(grid[0:2, 1])
             ax.scatter(y0_opt, y1_opt, marker='o', c='black')
-            ax.set_ylabel('F2', fontdict={'size': 20, 'color': 'black'})
-            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            ax.set_ylabel('$Obj_2$', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('$Obj_1$', fontdict={'size': 20, 'color': 'black'})
             plt.tick_params(labelsize=20)
             # y0 vs y2
             ax = fig.add_subplot(grid[2:4, 0])
             ax.scatter(y0_opt, y2_opt, marker='o', c='black')
-            ax.set_ylabel('F3', fontdict={'size': 20, 'color': 'black'})
-            ax.set_xlabel('F1', fontdict={'size': 20, 'color': 'black'})
+            ax.set_ylabel('$Obj_3$', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('$Obj_1$', fontdict={'size': 20, 'color': 'black'})
             plt.tick_params(labelsize=20)
             # y1 vs y2
             ax = fig.add_subplot(grid[2:4, 1])
             ax.scatter(y1_opt, y2_opt, marker='o', c='black')
-            ax.set_ylabel('F3', fontdict={'size': 20, 'color': 'black'})
-            ax.set_xlabel('F2', fontdict={'size': 20, 'color': 'black'})
+            ax.set_ylabel('$Obj_3$', fontdict={'size': 20, 'color': 'black'})
+            ax.set_xlabel('$Obj_2$', fontdict={'size': 20, 'color': 'black'})
             plt.tick_params(labelsize=20)
 
             plt.subplots_adjust(top=0.95) # remove top blank
@@ -204,7 +220,7 @@ class optimization():
 # e.g.
 if __name__ == '__main__':
     # ==================================================
-    rootpath = r'D:\ljj\aa\demo'  # your saopy file path
+    rootpath = r'F:\ljj\saopy-master'  # your saopy file path
     import sys
     sys.path.append(rootpath)  # you can directly import the modules in this folder
     sys.path.append(rootpath + r'\saopy\surrogate_model')
@@ -213,13 +229,13 @@ if __name__ == '__main__':
     from saopy.function_evaluation.benchmark_func import *
     from saopy.surrogate_model.ANN import *
     # from saopy.surrogate_model.KRG import *
-    # from saopy.surrogate_model.RBF import *
+    # from saopy.surrogate_model.RBF_pytorch import *
     from saopy.surrogate_model.surrogate_model import *
 
 
-    flag=1 # 0:single object demo, 1:multi object demo
+    obj_num=3 # objective number
 
-    if flag==0: # single object demo
+    if obj_num==1: # single object demo
         dimension=2
 
         lower_bound = [-32.768]*dimension # ackley
@@ -259,7 +275,23 @@ if __name__ == '__main__':
         opt.optimize()
         opt.plot()
 
-    else: # multi object demo
+
+    elif obj_num==2: # multi object demo
+        dimension = 30
+
+        lower_bound = [0]*dimension
+        upper_bound = [1]*dimension
+
+        f_list = []
+        # f_list.append(load_obj('best_surro'))  # optimize using surrogate model
+        f_list.append(ZDT1_obj0())  # optimize using real function
+        f_list.append(ZDT1_obj1())  # optimize using real function
+        opt = optimization(lower_bound, upper_bound, f_list, max_gen=500, pop_size=10)
+        opt.optimize()
+        opt.plot()
+
+
+    elif obj_num==3: # multi object demo
         dimension = 5
 
         lower_bound = [0]*dimension

@@ -1,3 +1,7 @@
+# ==================================================
+# author:luojiajie
+# ==================================================
+
 import csv
 import os
 import numpy as np
@@ -144,6 +148,9 @@ def surro_valid_compare(obj_num,total_iter,maxormin,plot_flag):
     elif obj_num == 2: # compare results of 2 objective optimization
         total_iter -= 1  # note: the last iteration X_new.csv is not stack to X.csv
 
+        y0_opt_valid_min=[]
+        y1_opt_valid_min = []
+
         X = read_csv_to_np('X.csv')
         y0 = read_csv_to_np('y0.csv')
         y1 = read_csv_to_np('y1.csv')
@@ -153,19 +160,31 @@ def surro_valid_compare(obj_num,total_iter,maxormin,plot_flag):
 
             y0_opt_valid = np.zeros((optimized_X.shape[0], 1))
             y1_opt_valid = np.zeros((optimized_X.shape[0], 1))
+            div_ind = []  # record CFD divergence case
             for i in range(optimized_X.shape[0]):
                 for j in range(X.shape[0]):
                     if (X[j, :] == optimized_X[i, :]).all():
                         y0_opt_valid[i, :] = y0[j, :]
                         y1_opt_valid[i, :] = y1[j, :]
                         break
-
-            plt.figure(figsize=(10, 8))
-            p1=plt.scatter(y0_opt_valid, y1_opt_valid, s=50, marker='^', c='none', edgecolors='black')
+                    elif j == X.shape[0] - 1:  # cannot find the same X optimized_X, because CFD diverge
+                        div_ind.append(i)  # record CFD divergence case
 
             y_opt_surro = np.loadtxt('Result_' + str(iter) + '/ObjV.csv', delimiter=',')
             y0_opt_surro = y_opt_surro[:, 0]
             y1_opt_surro = y_opt_surro[:, 1]
+
+            ###########################
+            for i in range(len(div_ind)):  # remove CFD divergence case
+                rm_ind = div_ind[i] - i  # the index to remove, note: when one index is removed, the total index in the array will -1 after that index
+                y0_opt_valid = np.delete(y0_opt_valid, rm_ind, 0)
+                y1_opt_valid = np.delete(y1_opt_valid, rm_ind, 0)
+                y0_opt_surro = np.delete(y0_opt_surro, rm_ind, 0)
+                y1_opt_surro = np.delete(y1_opt_surro, rm_ind, 0)
+            ###########################
+
+            plt.figure(figsize=(10, 8))
+            p1=plt.scatter(y0_opt_valid, y1_opt_valid, s=50, marker='^', c='none', edgecolors='black')
             p2=plt.scatter(y0_opt_surro, y1_opt_surro, s=50, marker='s', c='none', edgecolors='black')
 
             for i in range(y0_opt_valid.shape[0]): # plot line between opt_surro and opt_surro
@@ -180,6 +199,58 @@ def surro_valid_compare(obj_num,total_iter,maxormin,plot_flag):
             # plt.show()
             plt.savefig('plot/surro_valid_compare_'+str(iter)+'.eps')
             plt.close()
+
+            y0_opt_valid_min.append(y0_opt_valid.min())
+            y1_opt_valid_min.append(y1_opt_valid.min())
+
+        # evolution of pareto front - new
+        y0_opt_valid_min = np.array(y0_opt_valid_min)
+        y1_opt_valid_min = np.array(y1_opt_valid_min)
+        for i in range(1, y0_opt_valid_min.shape[0]):
+            if y0_opt_valid_min[i] > y0_opt_valid_min[i - 1]:
+                y0_opt_valid_min[i] = y0_opt_valid_min[i - 1]
+        for i in range(1, y1_opt_valid_min.shape[0]):
+            if y1_opt_valid_min[i] > y1_opt_valid_min[i - 1]:
+                y1_opt_valid_min[i] = y1_opt_valid_min[i - 1]
+
+        x0 = np.arange(1, total_iter + 1)
+
+        ind = total_iter
+        x = x0[0:ind]
+        y0 = y0_opt_valid_min[0:ind]
+        y1 = y1_opt_valid_min[0:ind]
+        # y0 = (y0 - y0.min()) / (y0.max() - y0.min())  # normalize y
+        # y1 = (y1 - y1.min()) / (y1.max() - y1.min())  # normalize y
+
+        y = [y0, y1]
+        F = ['F1', 'F2']
+        for i in range(len(y)):
+            # plt.figure(figsize=(16, 12))
+            plt.figure()
+            plt.plot(x, y[i], marker='o', c='black')
+
+            x_major_locator = MultipleLocator(10)  # 把x轴的刻度间隔设置为1，并存在变量里
+            ax = plt.gca()
+            ax.xaxis.set_major_locator(x_major_locator)
+
+            # ax1 = plt.gca()  # scientific notation
+            # ax1.yaxis.get_major_formatter().set_powerlimits((0, 1))  # scientific notation
+
+            plt.tick_params(labelsize=30)  # axis number size
+            fontXY = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }
+            plt.xlabel('Iteration', fontXY)
+            if i == 0:
+                plt.ylabel('Minimum actual ' + F[i] + '\non the Pareto front', fontXY)
+            if i == 1:
+                plt.ylabel('Minimum actual ' + F[i] + '\non the Pareto front', fontXY)
+
+            plt.subplots_adjust(top=0.88, bottom=0.2, left=0.4, right=0.98)
+            # plt.show()
+            plt.savefig('plot/evolution_of_pareto_front-' + F[i] + '.eps')
+            plt.close()
+
+
+
 
 
     elif obj_num == 3: # compare results of 3 objective optimization

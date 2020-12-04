@@ -38,11 +38,54 @@ class ass():
         return data
 
 
+    def sampling_number(self,DOE_num,max_num,min_num=1):
+        #single objective now
+        if os.path.exists('plot') == False:
+            os.makedirs('plot')
+
+        initial_num=round((max_num+min_num)/2)
+        step_up=round((max_num-initial_num)/5) # after 5 changing number, it will reach the max_num
+        step_low = round((min_num - initial_num) / 5)
+
+        if self.outer_iter ==0:
+            samp_num_list=np.array([[DOE_num],[initial_num*2+1]])
+            np.savetxt('plot/samp_num_list.csv', samp_num_list, delimiter=',')
+            return initial_num
+        if self.outer_iter ==1:
+            samp_num_list=self.read_csv_to_np('plot/samp_num_list.csv')
+            samp_num_list=np.vstack((samp_num_list,[[initial_num*2+1]]))
+            np.savetxt('plot/samp_num_list.csv', samp_num_list, delimiter=',')
+            return initial_num
+        else:
+            best_so_far= self.read_csv_to_np('plot/best_so_far.csv')
+            for i in range(best_so_far.shape[0]-1):
+                if best_so_far[i+1,0]<best_so_far[i,0]: # best so far improved, increase adding points
+                    if (initial_num+step_up)<=max_num:
+                        initial_num+=step_up
+                    else:
+                        initial_num=max_num
+                elif best_so_far[i+1,0]==best_so_far[i,0]: # best so far not improved, decrease adding points
+                    if (initial_num+step_low)>=min_num:
+                        initial_num += step_low
+                    else:
+                        initial_num = min_num
+
+            samp_num_list = self.read_csv_to_np('plot/samp_num_list.csv')
+            samp_num_list = np.vstack((samp_num_list, [[initial_num*2+1]]))
+            np.savetxt('plot/samp_num_list.csv', samp_num_list, delimiter=',')
+
+            func_eval_num = np.array([[samp_num_list[0,0]]])
+            for i in range(1,samp_num_list.shape[0]):
+                func_eval_num = np.vstack((func_eval_num, [[func_eval_num[i-1,0] + samp_num_list[i,0]]]))
+            np.savetxt('plot/func_eval_num.csv', func_eval_num, delimiter=',')
+            return initial_num
+
+
     def generate_new_X(self,number_optimized_X,number_exploitation_X,number_exploration_X):
         # optimization
-        opt = optimization(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, self.surro_list, max_gen=2000, pop_size=number_optimized_X)
+        opt = optimization(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, self.surro_list, max_gen=5000, pop_size=number_optimized_X)
         last_population = opt.optimize()
-        if self.plot_flag==0:
+        if self.plot_flag==1:
             opt.plot(self.outer_iter)
         if os.path.exists('Result_'+str(self.outer_iter)) == False:
             os.makedirs('Result_'+str(self.outer_iter))
@@ -56,12 +99,13 @@ class ass():
             exploit.plot(self.plot_y_range,self.outer_iter)
 
         # exploration
-        # explorat = exp_fullfactorial()
-        explorat = exp_random_lhs()
+        # explorat = exp_fullfactorial() # may take longer time especially for high dimension problem
+        explorat = exp_random_lhs() # note: can not use exploration.plot
         explorat.load_data(self.surro_list[0].lower_bound, self.surro_list[0].upper_bound, file_X='X.csv')
         explorat.normalize_X()
-        explorat.generate_candidate_points(1000000)
-        explorat.generate_exploration_X(number_exploration_X, self.outer_iter, self.plot_flag)
+        # explorat.generate_candidate_points(100)  # for fullfactorial
+        explorat.generate_candidate_points(1000000) # for random_lhs
+        explorat.generate_exploration_X(number_exploration_X, self.outer_iter, plot_flag=0)
 
         # stack three categories and remove duplicate points
         self.load_data()
@@ -162,17 +206,17 @@ class ass():
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     elif row_ind == 0 and col_ind != 0:  # first row, plot x axis label
                         plt.yticks([])
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
                     elif col_ind == 0 and row_ind != 0:  # first column, plot y axis label
                         plt.xticks([])
-                        plt.ylabel('x' + str(j), fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     else:  # other subplot, do not show x,y axis label
                         plt.xticks([])
                         plt.yticks([])
