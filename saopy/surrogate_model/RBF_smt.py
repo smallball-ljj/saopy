@@ -3,6 +3,7 @@
 # for more information about RBF_smt, visit
 # https://github.com/SMTorg/SMT
 # https://smt.readthedocs.io/en/latest/_src_docs/surrogate_models/rbf.html
+# !!!note: RBF_smt is the interpolating function，but can not be saved using pickle.dump, so it can only be tested for plot response surface
 # ==================================================
 
 from surrogate_model import surrogate_model

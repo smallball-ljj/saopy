@@ -4,6 +4,7 @@
 # for more information about pytorch, visit https://pytorch.org/
 # ==================================================
 # modified by luojiajie
+# !!!note: RBF_pytorch, which use back propagation, is not the interpolating function
 # ==================================================
 
 

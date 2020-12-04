@@ -172,10 +172,12 @@ class ANN(surrogate_model):
 
 
 
-def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons=100,step=1,num_fold=3,parallel_num=1):
+def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons=100,step=10,num_fold=3,parallel_num=1):
     """
     get best ANN architecture with minimum RMSE
     the total number of ANN architecture for testing is max_layers*max_neurons
+    !!!note: in some cases, ANN with 1 layer and very few neurons (<10) may get very small RMSE, which is unreasonable,
+    so we begin with neurons=11, you'd better check RMSE_mean_ANN_arch.eps before using it
 
     :param lower_bound: lower boundary of X
     :param upper_bound: upper boundary of X
@@ -190,7 +192,7 @@ def get_best_arch(lower_bound,upper_bound,file_X,file_y,max_layers=3,max_neurons
     """
     surro_list=[]
     for num_layers in range(1, max_layers+1):
-        for num_neurons in range(1, max_neurons+1, step):
+        for num_neurons in range(11, max_neurons+1, step):
             surro_list.append(ANN(num_layers=num_layers, num_neurons=num_neurons)) # get all architectures of ANN, you can also defined by yourself
 
     for surro in surro_list:
@@ -214,11 +216,11 @@ def get_best_arch_plot_RMSE(max_layers,max_neurons,step,save_ind):
     np.savetxt('RMSE_mean_ANN_arch_'+str(save_ind)+'.csv', RMSE_mean, delimiter=',')
     for num_layers in range(max_layers):
         label_list.append('number of hidden layer = '+str(num_layers+1))
-        node=(max_neurons-1)//step+1
+        node=(max_neurons-11)//step+1
         start_ind=num_layers*node
         end_ind=start_ind+node
         RMSE = RMSE_mean[start_ind:end_ind]
-        plt.plot(range(1,max_neurons+1,step),RMSE,marker=marker_list[num_layers],c=color_list[num_layers])
+        plt.plot(range(11,max_neurons+1,step),RMSE,marker=marker_list[num_layers],c=color_list[num_layers])
 
     plt.tick_params(labelsize=40)  # axis number size
     font = {'family': 'Times New Roman', 'weight': 'normal', 'size': 40, }
