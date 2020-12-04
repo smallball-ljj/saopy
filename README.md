@@ -1,5 +1,8 @@
 # saopy
 Surrogate Assisted Optimization Toolbox
 
-## dataflow and code structure
-![image](https://github.com/smallball-ljj/saopy/blob/master/dataflow%26code_structure.png)
+## saopy flowchart
+![image](https://github.com/smallball-ljj/saopy/blob/master/saopy_flowchart.png)
+
+## simplified saopy flowchart 
+![image](https://github.com/smallball-ljj/saopy/blob/master/saopy_flowchart_simple.png)
