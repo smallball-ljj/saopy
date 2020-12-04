@@ -53,7 +53,7 @@ class benchmark_func():
         np.savetxt(file_name, self.y, delimiter=',')
 
 
-    def plot(self, lower_bound, upper_bound, y_range=[], show_flag=1):
+    def plot(self, lower_bound, upper_bound, y_range=[], rest_var=None,show_flag=1):
         """
         plot function
 
@@ -62,6 +62,8 @@ class benchmark_func():
         :param y_range: 1. if y_range==[], plot y according to calculated max range of y
                         2. plot y acoording to given range: y_range=[lower boundary, upper boundary, step]
                         e.g. y_range=[0,10,1]
+        :param rest_var: available for dimension>=3. note: the response surface is plotted over the two selected variables, so the rest varible will keep the same value
+          if rest_var==None, the rest variables are set as the mid point of lower_bound and upper_bound by default
         :param show_flag: if show_flag==1, show the plot (default)
                           if show_flag==0, do not show the plot (which will return plt, for other class to call it)
         """
@@ -106,7 +108,7 @@ class benchmark_func():
                     row_ind = -j + dimension - 1 # row index
                     ind = row_ind * (dimension - 1) + col_ind + 1 # subplot index
                     plt.subplot(dimension - 1, dimension - 1, ind) # locate subplot
-                    cont=self.plot_md(i, j, lower_bound, upper_bound, y_range, show_flag_md=0) # plot response surface in subplot
+                    cont=self.plot_md(i, j, lower_bound, upper_bound, y_range, rest_var, show_flag_md=0) # plot response surface in subplot
                     # plot axis label
                     fontXY = {'family': 'Times New Roman', 'weight': 'normal', 'size': 30, }  # xy label size
                     axisfont = 20  # axis number size
@@ -114,17 +116,17 @@ class benchmark_func():
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i+1), fontXY)
-                        plt.ylabel('x' + str(j+1), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     elif row_ind == 0 and col_ind != 0:  # first row, plot x axis label
                         plt.yticks([])
                         ax = plt.gca()
                         ax.xaxis.set_ticks_position('top')
                         ax.xaxis.set_label_position('top')
-                        plt.xlabel('x' + str(i+1), fontXY)
+                        plt.xlabel('$x_' + str(i+1)+'$', fontXY)
                     elif col_ind == 0 and row_ind != 0:  # first column, plot y axis label
                         plt.xticks([])
-                        plt.ylabel('x' + str(j+1), fontXY)
+                        plt.ylabel('$x_' + str(j+1)+'$', fontXY)
                     else:  # other subplot, do not show x,y axis label
                         plt.xticks([])
                         plt.yticks([])
@@ -157,16 +159,19 @@ class benchmark_func():
         return plt
 
 
-    def plot_md(self, x1_arg, x2_arg, lower_bound, upper_bound, y_range=[], show_flag_md=1):
+    def plot_md(self, x1_arg, x2_arg, lower_bound, upper_bound, y_range=[], rest_var=None, show_flag_md=1):
         """
         plot multi dimension response surface of the selected two variables: x1_arg and x2_arg
-        the rest variables are set as the mid point of lower_bound and upper_bound by default
+        if rest_var==None, the rest variables are set as the mid point of lower_bound and upper_bound by default
 
         e.g. x1_arg=0, x2_arg=3, it will plot the response surface with the first and the fourth parameters as variables
         """
         plotgrid = 100 # the number of grid points of each varible, so the total number of grid points is plotgrid^2
         X = np.ones((plotgrid*plotgrid, len(lower_bound))) # initialize X
-        rest_var=(np.array(lower_bound)+np.array(upper_bound))/2 # all variables are set as the mid point of lower_bound and upper_bound by default
+        try: # note: if rest_var!=None, it will report error, so we use try, and the function is the same
+            if rest_var==None:
+                rest_var=(np.array(lower_bound)+np.array(upper_bound))/2 # all variables are set as the mid point of lower_bound and upper_bound by default
+        except: pass
         X=rest_var*X
 
         # set the selected two variables
@@ -563,8 +568,8 @@ if __name__ == '__main__':
     # lower_bound = [-5.12]*dimension # sphere
     # upper_bound = [5.12]*dimension
 
-    # lower_bound = [-2*3.14159]*dimension # easom
-    # upper_bound = [2*3.14159]*dimension
+    lower_bound = [-2*3.14159]*dimension # easom
+    upper_bound = [2*3.14159]*dimension
 
     # lower_bound = [-600]*dimension # griewank
     # upper_bound = [600]*dimension
@@ -584,14 +589,14 @@ if __name__ == '__main__':
     # lower_bound = [-500]*dimension # schwefel
     # upper_bound = [500]*dimension
 
-    lower_bound = [0]*dimension # shubert
-    upper_bound = [1]*dimension
+    # lower_bound = [0]*dimension # shubert
+    # upper_bound = [1]*dimension
 
     # f = ackley(dimension)
     # f = sphere(dimension)
     # f = sphere_weighted(dimension)
     # f = sphere_powered(dimension)
-    # f = easom(dimension)
+    f = easom(dimension)
     # f = griewank(dimension)
     # f = michaelwicz(dimension)
     # f = perm(dimension)
@@ -599,10 +604,11 @@ if __name__ == '__main__':
     # f = rosenbrock(dimension)
     # f = schwefel(dimension)
     # f = shubert(dimension)
-    f = DTLZ1_m2_obj0(dimension)
+    # f = DTLZ1_m2_obj0(dimension)
 
 
     # X = f.read_csv_to_np('output_sampling_plan.csv')
     # f.calculate(X)
     # f.output('output_func.csv')
-    f.plot(lower_bound, upper_bound,[0,80,10])
+    # f.plot(lower_bound, upper_bound)
+    f.plot(lower_bound, upper_bound,y_range=[-1,0,0.2],rest_var=np.array([3.14,3.14,3.14,3.14,3.14]))
