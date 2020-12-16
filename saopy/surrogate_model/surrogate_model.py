@@ -243,12 +243,12 @@ class surrogate_model():
                 plt.axis('off') # do not plot axis
 
             if y_range == []:  # plot according to y range
-                cbar = plt.colorbar(cont)  # plot color bar
-                fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, }  # colorbar label size
-                axisfont = 20  # axis number size
-                cbar.ax.set_ylabel(y_label, fontC)  # color bar label
-                cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
-                # pass
+                # cbar = plt.colorbar(cont)  # plot color bar
+                # fontC = {'family': 'Times New Roman', 'weight': 'normal', 'size': 25, }  # colorbar label size
+                # axisfont = 20  # axis number size
+                # cbar.ax.set_ylabel(y_label, fontC)  # color bar label
+                # cbar.ax.tick_params(labelsize=axisfont)  # color bar axis number size
+                pass
             else:  # plot color bar according to given range
                 t=np.arange(y_range[0], y_range[1] + y_range[2] / 2, y_range[2])
                 cbar = plt.colorbar(cont,ticks=t.tolist())  # plot color bar #bug: np.arange(15,20.1,0.1)
@@ -311,7 +311,7 @@ class surrogate_model():
 
         if y_range == []:  # plot contour according to y range
             cont = plt.contourf(X1, X2, y, 50, cmap=cmaps)
-            # cbar = plt.colorbar(cont)  # plot color bar
+            cbar = plt.colorbar(cont)  # plot color bar
 
         else:  # plot contour according to given range
             y[y < y_range[0]] = y_range[0]  # assgin any y, which is smaller than the given lower boundary, to lower boundary
@@ -322,8 +322,8 @@ class surrogate_model():
             
             
             # plot contour line
-            #c = plt.contour(X1, X2, y, lim, colors='black',linewidths=1)
-            #plt.clabel(c, inline=0, fontsize=10,fmt='%.3f')
+            # c = plt.contour(X1, X2, y, lim, colors='black',linewidths=1)
+            # plt.clabel(c, inline=0, fontsize=10,fmt='%.3f')
             
             
 
